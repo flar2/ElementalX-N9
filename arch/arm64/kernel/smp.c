@@ -190,8 +190,12 @@ int __cpu_up(unsigned int cpu, struct task_struct *idle)
 	return ret;
 }
 
-#ifdef CONFIG_HOTPLUG_CPU
+static void smp_store_cpu_info(unsigned int cpuid)
+{
+	store_cpu_topology(cpuid);
+}
 
+#ifdef CONFIG_HOTPLUG_CPU
 static int platform_cpu_kill(unsigned int cpu)
 {
 	if (smp_ops.cpu_kill)
@@ -532,6 +536,10 @@ void __init smp_prepare_cpus(unsigned int max_cpus)
 {
 	int cpu, err;
 	unsigned int ncores = num_possible_cpus();
+
+	init_cpu_topology();
+
+	smp_store_cpu_info(smp_processor_id());
 
 	/*
 	 * are we trying to boot more cores than exist?
