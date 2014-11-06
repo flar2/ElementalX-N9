@@ -176,7 +176,7 @@ static void tegra_kbc_report_keys(struct tegra_kbc *kbc)
 			 * Find 2 keys such that one key is in the same row
 			 * and the other is in the same column as the i-th key.
 			 */
-			for (j = i + 1; j < num_down; j++) {
+			for (j = i + 1; j < KBC_MAX_KPENT; j++) {
 				u8 col = scancodes[j] & 0x07;
 				u8 row = scancodes[j] >> KBC_ROW_SHIFT;
 
