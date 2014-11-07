@@ -898,4 +898,12 @@ config AID_FUSE
 	help
 	  When enabled, allows sysfs reads of the AID fuse, which contains
 	  the chip family ID and a chip-unique Tegra ID. Supported on t132+.
+
+config TEGRA_CPU_VOLTAGE_CONTROL
+	bool "Userspace CPU Voltage Control"
+	select REGULATOR_TEGRA_DFLL_BYPASS
+	default n
+	help
+	  This enables userspace CPU Voltage Control.
+
 endif

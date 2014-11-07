@@ -34,6 +34,11 @@
 #include "pm.h"
 #include "tegra_simon.h"
 
+#ifdef CONFIG_TEGRA_CPU_VOLTAGE_CONTROL
+#include <linux/cpufreq.h>
+static int temp_mv_table[MAX_DVFS_FREQS];
+#endif
+
 static bool tegra_dvfs_cpu_disabled;
 static bool tegra_dvfs_core_disabled;
 static bool tegra_dvfs_gpu_disabled;
@@ -988,8 +993,86 @@ static int __init set_cpu_dvfs_data(unsigned long max_freq,
 		}
 	}
 
+#ifdef CONFIG_TEGRA_CPU_VOLTAGE_CONTROL
+	for (j = 0; j < MAX_DVFS_FREQS; j++) {
+		temp_mv_table[j] = cpu_millivolts[j];
+	}
+#endif
+
 	return 0;
 }
+
+
+#ifdef CONFIG_TEGRA_CPU_VOLTAGE_CONTROL
+#define CPU_VDD_MAX	1260
+#define CPU_VDD_MIN	680
+
+static unsigned int cnt;
+
+ssize_t show_UV_mV_table(struct cpufreq_policy *policy,
+			 char *buf)
+{
+	int i, freq, len = 0;
+struct clk *cpu_clk_g = tegra_get_clock_by_name("cpu_g");
+
+	if (!buf)
+		return -EINVAL;
+
+
+	for (i = 0; i < MAX_DVFS_FREQS; i++) {
+		if (cpu_clk_g->dvfs->freqs[i] > 0) {
+			freq = cpu_clk_g->dvfs->freqs[i] / 1000;
+
+		len += sprintf(buf + len, "%dmhz: %d mV\n", freq,
+			       cpu_clk_g->dvfs->millivolts[i]);
+		}
+
+	}
+
+	return len;
+}
+
+ssize_t store_UV_mV_table(struct cpufreq_policy *policy,
+			  char *buf, size_t count)
+{
+	int i;
+	int ret = 0;
+	unsigned int val;
+	char size_cur[4];
+	struct clk *cpu_clk_g = tegra_get_clock_by_name("cpu_g");
+
+	if (cnt) {
+		cnt = 0;
+		return -EINVAL;
+	}
+
+	for (i = 0; i < MAX_DVFS_FREQS; i++) {
+		if (cpu_clk_g->dvfs->freqs[i] > 0) {
+
+
+			ret = sscanf(buf, "%u", &val);
+			if (!ret)
+				return -EINVAL;
+
+			if (val > CPU_VDD_MAX)
+				val = CPU_VDD_MAX;
+			else if (val < CPU_VDD_MIN)
+				val = CPU_VDD_MIN;
+
+			temp_mv_table[i] = val;
+
+			ret = sscanf(buf, "%s", size_cur);
+			cnt = strlen(size_cur);
+			buf += cnt + 1;
+		}
+	}
+
+	cpu_clk_g->dvfs->millivolts = temp_mv_table;
+
+	return ret;
+}
+#endif
+
 
 static int __init set_gpu_dvfs_data(unsigned long max_freq,
 	struct gpu_cvb_dvfs *d, struct dvfs *gpu_dvfs, int *max_freq_index)
