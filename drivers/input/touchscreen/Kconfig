@@ -956,5 +956,8 @@ config TOUCHSCREEN_MAX1187X
 
           If unsure, say N.
 
+config WAKE_GESTURES
+        bool "Wake Gestures"
+
 source "drivers/input/touchscreen/synaptics_dsx/Kconfig"
 endif
