@@ -847,6 +847,8 @@ retry:
 		bvec->bv_len = len;
 		bvec->bv_offset = 0;
 
+		clone->bi_size += len;
+
 		remaining_size -= len;
         }
 
