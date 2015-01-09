@@ -582,7 +582,7 @@ static ssize_t sweep2sleep_dump(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	sscanf(buf, "%d ", &s2s_switch);
-	if (s2s_switch < 0 || s2s_switch > 15)
+	if (s2s_switch < 0 || s2s_switch > 3)
 		s2s_switch = 0;				
 				
 	return count;
