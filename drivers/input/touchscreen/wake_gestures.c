@@ -67,7 +67,7 @@
 #define SWEEP_POR		0x01
 #define SWEEP_LAN		0x02
 
-#define WAKE_GESTURES_ENABLED	0
+#define WAKE_GESTURES_ENABLED	1
 
 #define LOGTAG			"WG"
 
@@ -708,7 +708,6 @@ static int __init wake_gestures_init(void)
 		pr_err("%s: input_register_device err=%d\n", __func__, rc);
 		goto err_gesture_dev;
 	}
-	gestures_setdev(gesture_dev);	
 #endif
 
 	android_touch_kobj = kobject_create_and_add("android_touch", NULL) ;
@@ -734,13 +733,14 @@ static int __init wake_gestures_init(void)
 	}
 #endif
 
-err_wake_dev:
-	input_free_device(wake_dev);
-	
+	return 0;
+
 #if (WAKE_GESTURES_ENABLED)	
 err_gesture_dev:
 	input_free_device(gesture_dev);
 #endif
+err_wake_dev:
+	input_free_device(wake_dev);
 
 err_alloc_dev:
 	pr_info(LOGTAG"%s done\n", __func__);
