@@ -25,6 +25,7 @@
 #include <linux/CwMcuSensor.h>
 #include <linux/gpio.h>
 #include <linux/wakelock.h>
+#include <linux/leds.h>
 #ifdef CONFIG_OF
 #include <linux/of_gpio.h>
 #endif
@@ -231,6 +232,8 @@ struct cwmcu_data {
 
 	int fw_update_status;
 	u16 erase_fw_wait;
+
+	struct led_classdev led_cdev;
 };
 
 BLOCKING_NOTIFIER_HEAD(double_tap_notifier_list);
@@ -760,6 +763,23 @@ static ssize_t led_enable(struct device *dev,
 	}
 
 	return count;
+}
+
+static void led_set(struct led_classdev *led_cdev,
+	enum led_brightness value)
+{
+	struct cwmcu_data *mcu_data;
+	int error;
+	u8 data;
+
+	mcu_data = container_of(led_cdev, struct cwmcu_data, led_cdev);
+
+	data = value ? 2 : 4;
+
+	error = CWMCU_i2c_write_power(mcu_data, 0xD0, &data, 1);
+	if (error < 0) {
+		E("%s: error = %d\n", __func__, error);
+	}
 }
 
 static ssize_t get_k_value(struct cwmcu_data *mcu_data, int type, char *buf,
@@ -3953,11 +3973,18 @@ static int create_sysfs_interfaces(struct cwmcu_data *mcu_data)
 	if (res < 0)
 		goto error;
 
+	res = led_classdev_register(&mcu_data->client->dev, &mcu_data->led_cdev);
+	if (res < 0) {
+		pr_info("nexus9_led probe error:  register failed\n");
+		goto error;
+	}
+
 	return 0;
 
 error:
 	while (--i >= 0)
 		device_remove_file(mcu_data->sensor_dev, attributes + i);
+	led_classdev_unregister(&mcu_data->led_cdev);
 err_set_drvdata:
 	put_device(mcu_data->sensor_dev);
 	device_unregister(mcu_data->sensor_dev);
@@ -3975,6 +4002,7 @@ static void destroy_sysfs_interfaces(struct cwmcu_data *mcu_data)
 		device_remove_file(mcu_data->sensor_dev, attributes + i);
 	put_device(mcu_data->sensor_dev);
 	device_unregister(mcu_data->sensor_dev);
+	led_classdev_unregister(&mcu_data->led_cdev);
 	class_destroy(mcu_data->sensor_class);
 }
 
@@ -4271,6 +4299,9 @@ static int CWMCU_i2c_probe(struct i2c_client *client,
 	mutex_init(&mcu_data->power_mode_lock);
 	mutex_init(&mcu_data->lock);
 
+	mcu_data->led_cdev.name = "white";
+	mcu_data->led_cdev.brightness_set = led_set;
+	
 	INIT_DELAYED_WORK(&mcu_data->work, cwmcu_work_report);
 	INIT_WORK(&mcu_data->one_shot_work, cwmcu_one_shot);
 
