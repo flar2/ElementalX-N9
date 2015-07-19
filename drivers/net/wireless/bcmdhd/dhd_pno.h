@@ -63,7 +63,8 @@
 
 #ifdef GSCAN_SUPPORT
 
-#define GSCAN_MAX_CH_BUCKETS         8
+#define GSCAN_MAX_CH_BUCKETS             8
+#define GSCAN_MAX_CHANNELS_IN_BUCKET     32
 #define GSCAN_BG_BAND_MASK             (1 << 0)
 #define GSCAN_A_BAND_MASK              (1 << 1)
 #define GSCAN_DFS_MASK                 (1 << 2)
@@ -273,6 +274,8 @@ struct dhd_pno_hotlist_params {
 	struct list_head bssid_list;
 };
 #ifdef GSCAN_SUPPORT
+#define DHD_PNO_REPORT_NO_BATCH      (1 << 2)
+
 typedef struct dhd_pno_gscan_channel_bucket {
 	uint16 bucket_freq_multiple;
 	/* band = 1 All bg band channels,
@@ -282,7 +285,9 @@ typedef struct dhd_pno_gscan_channel_bucket {
 	uint16 band;
 	uint8 report_flag;
 	uint8 num_channels;
-	uint16 chan_list[GSCAN_MAX_CH_BUCKETS];
+	uint16 repeat;
+	uint16 bucket_max_multiple;
+	uint16 chan_list[GSCAN_MAX_CHANNELS_IN_BUCKET];
 } dhd_pno_gscan_channel_bucket_t;
 
 
@@ -309,6 +314,7 @@ typedef struct dhd_epno_results {
 	int8 rssi;
 	uint16 channel;
 	uint16 flags;
+	struct ether_addr bssid;
 } dhd_epno_results_t;
 
 struct dhd_pno_swc_evt_param {
@@ -338,6 +344,13 @@ typedef struct gscan_results_cache {
 	uint8  tot_consumed;
 	wifi_gscan_result_t results[1];
 } gscan_results_cache_t;
+
+typedef struct {
+    int  id;                            /* identifier of this network block, report this in event */
+    char realm[256];                    /* null terminated UTF8 encoded realm, 0 if unspecified */
+    int64_t roamingConsortiumIds[16];   /* roaming consortium ids to match, 0s if unspecified */
+    uint8 plmn[3];                      /* mcc/mnc combination as per rules, 0s if unspecified */
+} wifi_passpoint_network;
 
 typedef struct dhd_pno_gscan_capabilities {
     int max_scan_cache_size;
@@ -501,6 +514,8 @@ extern void dhd_dev_gscan_hotlist_cache_cleanup(struct net_device *dev, hotlist_
 extern int dhd_dev_wait_batch_results_complete(struct net_device *dev);
 extern void * dhd_dev_process_epno_result(struct net_device *dev,
                         const void  *data, uint32 event, int *send_evt_bytes);
+extern void * dhd_dev_process_anqpo_result(struct net_device *dev,
+			const void  *data, uint32 event, int *send_evt_bytes);
 #endif /* GSCAN_SUPPORT */
 /* dhd pno fuctions */
 extern int dhd_pno_stop_for_ssid(dhd_pub_t *dhd);
@@ -547,6 +562,7 @@ extern void dhd_gscan_hotlist_cache_cleanup(dhd_pub_t *dhd, hotlist_type_t type)
 extern int dhd_wait_batch_results_complete(dhd_pub_t *dhd);
 extern void * dhd_pno_process_epno_result(dhd_pub_t *dhd, const void *data,
          uint32 event, int *size);
+extern void * dhd_pno_process_anqpo_result(dhd_pub_t *dhd, const void *data, uint32 event, int *size);
 #endif /* GSCAN_SUPPORT */
 #endif /* PNO_SUPPORT */
 

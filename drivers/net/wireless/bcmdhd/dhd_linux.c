@@ -785,6 +785,12 @@ typedef struct dhd_dev_priv {
 #define DHD_DEV_IFP(dev)        (((dhd_dev_priv_t *)DEV_PRIV(dev))->ifp)
 #define DHD_DEV_IFIDX(dev)      (((dhd_dev_priv_t *)DEV_PRIV(dev))->ifidx)
 
+#if defined(DHD_OF_SUPPORT)
+extern int dhd_wlan_init(void);
+extern void dhd_wlan_exit(void);
+#endif /* defined(DHD_OF_SUPPORT) */
+
+
 /** Clear the dhd net_device's private structure. */
 static inline void
 dhd_dev_priv_clear(struct net_device * dev)
@@ -6906,6 +6912,9 @@ dhd_module_exit(void)
 {
 	dhd_module_cleanup();
 	unregister_reboot_notifier(&dhd_reboot_notifier);
+#if defined(DHD_OF_SUPPORT)
+	dhd_wlan_exit();
+#endif /* defined(DHD_OF_SUPPORT) */
 }
 
 static int __init
@@ -6915,6 +6924,14 @@ dhd_module_init(void)
 	int retry = POWERUP_MAX_RETRY;
 
 	DHD_ERROR(("%s in\n", __FUNCTION__));
+#if defined(DHD_OF_SUPPORT)
+	err = dhd_wlan_init();
+	if(err) {
+		DHD_ERROR(("%s: failed in dhd_wlan_init.",__FUNCTION__));
+		return err;
+	}
+#endif /* defined(DHD_OF_SUPPORT) */
+
 
 	DHD_PERIM_RADIO_INIT();
 
@@ -8055,6 +8072,14 @@ int dhd_dev_set_whitelist_ssid(struct net_device *dev, wl_ssid_whitelist_t *ssid
 		DHD_ERROR(("%s : Failed to execute roam_exp_bssid_pref %d\n", __FUNCTION__, err));
 	}
 	return err;
+}
+
+void * dhd_dev_process_anqpo_result(struct net_device *dev,
+			const void  *data, uint32 event, int *send_evt_bytes)
+{
+	dhd_info_t *dhd = *(dhd_info_t **)netdev_priv(dev);
+
+	return (dhd_pno_process_anqpo_result(&dhd->pub, data, event, send_evt_bytes));
 }
 #endif /* GSCAN_SUPPORT */
 

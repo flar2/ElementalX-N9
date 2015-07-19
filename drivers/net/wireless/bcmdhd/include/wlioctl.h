@@ -2717,15 +2717,18 @@ typedef struct wl_pfn_cfg {
 #define CH_BUCKET_REPORT_FULL_RESULT        2
 #define CH_BUCKET_GSCAN                     4
 
-typedef struct wl_pfn_gscan_channel_bucket {
-	uint16 bucket_end_index;
+typedef struct wl_pfn_gscan_ch_bucket_cfg {
+	uint8 bucket_end_index;
 	uint8 bucket_freq_multiple;
 	uint8 flag;
-} wl_pfn_gscan_channel_bucket_t;
+	uint8 reserved;
+	uint16 repeat;
+	uint16 max_freq_multiple;
+} wl_pfn_gscan_ch_bucket_cfg_t;
 
-#define GSCAN_SEND_ALL_RESULTS_MASK    (1 << 0)
-#define GSCAN_CFG_FLAGS_ONLY_MASK      (1 << 7)
-#define WL_GSCAN_CFG_VERSION            1
+#define GSCAN_SEND_ALL_RESULTS_MASK          (1 << 0)
+#define GSCAN_CFG_FLAGS_ONLY_MASK            (1 << 7)
+#define WL_GSCAN_CFG_VERSION                     2
 typedef struct wl_pfn_gscan_cfg {
 	uint16 version;
 	/* BIT0 1 = send probes/beacons to HOST
@@ -2746,7 +2749,7 @@ typedef struct wl_pfn_gscan_cfg {
 	uint8  count_of_channel_buckets;
 	uint8  retry_threshold;
 	uint16  lost_ap_window;
-	wl_pfn_gscan_channel_bucket_t channel_bucket[1];
+	wl_pfn_gscan_ch_bucket_cfg_t channel_bucket[1];
 } wl_pfn_gscan_cfg_t;
 
 #define WL_PFN_REPORT_ALLNET    0
@@ -2773,7 +2776,7 @@ typedef struct wl_pfn_list {
 	wl_pfn_t	pfn[1];
 } wl_pfn_list_t;
 
-#define PFN_SSID_EXT_VERSION   1
+#define PFN_SSID_EXT_VERSION   2
 
 typedef struct wl_pfn_ext {
 	uint8 flags;
@@ -2798,7 +2801,8 @@ typedef struct wl_pfn_result_ssid {
 	/* channel number */
 	uint16 channel;
 	/* Assume idx in order of cfg */
-	uint32 index;
+	uint16 index;
+	struct ether_addr bssid;
 } wl_pfn_result_ssid_crc32_t;
 
 typedef struct wl_pfn_ssid_ext_result {
@@ -2981,6 +2985,50 @@ typedef struct {
 	uint16 count;				/* number of addr in list */
 	struct ether_addr bssid[1];	/* max ANQPO_MAX_IGNORE_BSSID */
 } wl_anqpo_ignore_bssid_list_t;
+
+#define ANQPO_MAX_PFN_HS        16
+#define ANQPO_MAX_OI_LENGTH     8
+typedef struct
+{
+        uint8 length;
+        uint8 data[ANQPO_MAX_OI_LENGTH];
+} wl_anqpo_oi_t;
+
+#define ANQPO_MAX_OI    16
+typedef struct
+{
+        uint32 numOi;
+        wl_anqpo_oi_t oi[ANQPO_MAX_OI];
+} wl_anqpo_roaming_consortium_t;
+
+#define ANQPO_MAX_REALM_LENGTH  255
+typedef struct
+{
+        uint8 length;
+        uint8 data[ANQPO_MAX_REALM_LENGTH + 1]; /* null terminated */
+} wl_anqpo_realm_data_t;
+
+#define ANQPO_MCC_LENGTH        3
+#define ANQPO_MNC_LENGTH        3
+typedef struct
+{
+        char mcc[ANQPO_MCC_LENGTH + 1];
+        char mnc[ANQPO_MNC_LENGTH + 1];
+} wl_anqpo_plmn_t;
+
+typedef struct {
+        uint32 version;
+        uint32 id;
+        wl_anqpo_plmn_t plmn;
+        wl_anqpo_realm_data_t realm;
+        wl_anqpo_roaming_consortium_t rc;
+} wl_anqpo_pfn_hs_t;
+
+typedef struct {
+        bool is_clear;                          /* set to clear list (not used on GET) */
+        uint16 count;                           /* number of preferred hotspot in list */
+        wl_anqpo_pfn_hs_t hs[];        		/* max ANQPO_MAX_PFN_HS */
+} wl_anqpo_pfn_hs_list_t;
 
 
 struct toe_ol_stats_t {
