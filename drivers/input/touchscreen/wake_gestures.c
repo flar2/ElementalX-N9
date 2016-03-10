@@ -39,7 +39,7 @@
 #define WG_DEFAULT		0
 #define S2W_DEFAULT		15
 #define S2S_DEFAULT		1
-#define WG_PWRKEY_DUR           60
+#define WG_PWRKEY_DUR           100
 
 /* flounder */
 #define SWEEP_Y_MAX             2304
@@ -54,11 +54,11 @@
 #define SWEEP_X_FINAL           768
 #define SWEEP_Y_NEXT            180
 #define DT2W_FEATHER		150
-#define DT2W_TIME 		50
+#define DT2W_TIME 		150
 
 /* Wake Gestures */
-#define SWEEP_TIMEOUT		30
-#define TRIGGER_TIMEOUT		50
+#define SWEEP_TIMEOUT		90
+#define TRIGGER_TIMEOUT		150
 #define WAKE_GESTURE		0x0b
 #define SWEEP_RIGHT		0x01
 #define SWEEP_LEFT		0x02
@@ -173,7 +173,7 @@ static void new_touch(int x, int y) {
 	x_pre = x;
 	y_pre = y;
 	touch_nr++;
-	wake_lock_timeout(&dt2w_wakelock, HZ/2);
+	wake_lock_timeout(&dt2w_wakelock, 150);
 }
 
 /* Doubletap2wake main function */
