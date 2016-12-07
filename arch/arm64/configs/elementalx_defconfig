@@ -1,6 +1,6 @@
 #
 # Automatically generated file; DO NOT EDIT.
-# Linux/arm64 3.10.101 Kernel Configuration
+# Linux/arm64 3.10.103 Kernel Configuration
 #
 CONFIG_ARM64=y
 CONFIG_NEED_MACH_MEMORY_H=y
@@ -39,7 +39,7 @@ CONFIG_IRQ_WORK=y
 #
 CONFIG_INIT_ENV_ARG_LIMIT=32
 CONFIG_CROSS_COMPILE=""
-CONFIG_LOCALVERSION="-ElementalX-N9-5.05"
+CONFIG_LOCALVERSION="-ElementalX-N9-5.06"
 # CONFIG_LOCALVERSION_AUTO is not set
 CONFIG_DEFAULT_HOSTNAME=""
 CONFIG_SWAP=y
