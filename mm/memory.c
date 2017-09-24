@@ -3207,7 +3207,6 @@ out_release:
 	return ret;
 }
 
-
 extern bool is_vma_temporary_stack(struct vm_area_struct *vma);
 /*
  * We enter with non-exclusive mmap_sem (to exclude vma changes,
