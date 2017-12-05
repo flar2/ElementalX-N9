@@ -435,8 +435,8 @@ static void locate_dirty_segment(struct f2fs_sb_info *sbi, unsigned int segno)
 static int f2fs_issue_discard(struct f2fs_sb_info *sbi,
 				block_t blkstart, block_t blklen)
 {
-	sector_t start = SECTOR_FROM_BLOCK(blkstart);
-	sector_t len = SECTOR_FROM_BLOCK(blklen);
+	sector_t start = SECTOR_FROM_BLOCK(sbi, blkstart);
+	sector_t len = SECTOR_FROM_BLOCK(sbi, blklen);
 	trace_f2fs_issue_discard(sbi->sb, blkstart, blklen);
 	return blkdev_issue_discard(sbi->sb->s_bdev, start, len, GFP_NOFS, 0);
 }
@@ -1441,6 +1441,10 @@ static int read_normal_summaries(struct f2fs_sb_info *sbi, int type)
 
 static int restore_curseg_summaries(struct f2fs_sb_info *sbi)
 {
+	struct f2fs_summary_block *s_sits =
+		CURSEG_I(sbi, CURSEG_COLD_DATA)->sum_blk;
+	struct f2fs_summary_block *s_nats =
+		CURSEG_I(sbi, CURSEG_HOT_DATA)->sum_blk;
 	int type = CURSEG_HOT_DATA;
 	int err;
 
@@ -1456,6 +1460,11 @@ static int restore_curseg_summaries(struct f2fs_sb_info *sbi)
 		if (err)
 			return err;
 	}
+
+	/* sanity check for summary blocks */
+	if (nats_in_cursum(s_nats) > NAT_JOURNAL_ENTRIES ||
+			sits_in_cursum(s_sits) > SIT_JOURNAL_ENTRIES)
+		return -EINVAL;
 
 	return 0;
 }
