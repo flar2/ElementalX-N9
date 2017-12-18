@@ -3762,7 +3762,7 @@ CONFIG_TEGRA_GK20A=y
 # Android
 #
 CONFIG_ANDROID_BINDER_IPC=y
-CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder"
+CONFIG_ANDROID_BINDER_DEVICES="binder,hwbinder,vndbinder"
 
 #
 # File systems
